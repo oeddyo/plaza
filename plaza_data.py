@@ -102,7 +102,7 @@ class PlazaAnalyzer():
         if not self.inPoly(p):
             return False
         
-        if not self.isWeekday(p):
+        if  self.isWeekday(p):
             return False
         
         return True
@@ -131,7 +131,7 @@ class PlazaAnalyzer():
             features.append( list(self.getCoordinates(p)))
         km = KMeans(n_clusters = 10, init='k-means++', max_iter=100)
         km.fit(features) 
-        f = file('clustered_kmeans_10.txt', 'w')
+        f = file('clustered_kmeans_10_weekend.txt', 'w')
 
         for idx in range(len(photos)):
             p = photos[idx]
