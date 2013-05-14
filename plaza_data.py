@@ -114,8 +114,11 @@ class PlazaAnalyzer():
             return False
         #if  self.isWeekday(p):
         #    return False
-        if not self.isMorning(p):
+        if self.isEvening(p):
             return False
+
+        #if not self.isMorning(p):
+        #    return False
 
         return True
 
@@ -147,7 +150,7 @@ class PlazaAnalyzer():
         algo = MeanShift() 
         algo.fit(np.asarray(features))
 
-        f = file('morning_msp_meanshift.csv', 'w')
+        f = file('evening_msp_meanshift.csv', 'w')
 
         for idx in range(len(photos)):
             p = photos[idx]
