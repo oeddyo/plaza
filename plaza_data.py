@@ -10,6 +10,11 @@ from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, MeanShift
 from sklearn import cluster
 from datetime import datetime
 import numpy as np
+from mongodb_interface import MongoDBInterface
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+
+
 
 class PlazaAnalyzer():
     def __init__(self):
@@ -135,6 +140,8 @@ class PlazaAnalyzer():
                 photo_cnt += 1
             if photo_cnt % 100 == 0:
                 print 'accepting photo data', photo_cnt
+            if photo_cnt>1000:
+                break
         return ok_photos
 
     def doClustering(self):
@@ -156,8 +163,39 @@ class PlazaAnalyzer():
             p = photos[idx]
             f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(algo.labels_[idx])+'\n' ))
 
-         
-
+    def doClusteringOnUser(self):
+        photos = self.getClusteringData()
+        all_text = []
+        ei = MongoDBInterface()
+        ei.setDB('citybeat_production')
+        ei.setCollection('photos')
+        user_cnt = 0
+        for p in photos:
+            user_cnt+=1
+            if user_cnt%10==0:
+                print 'user ', user_cnt
+            user_name = p['user']['username']
+            user_photos = ei.getAllDocuments( {'user.username':user_name})
+            text = ""
+            for tp in user_photos:
+                try:
+                    text += tp['caption']['text']
+                except:
+                    continue
+            all_text.append( text )
+        vectorizer = TfidfVectorizer(max_df = 0.1, stop_words='english', use_idf=True)
+        X = vectorizer.fit_transform(all_text)
+        
+        print 'shape = ',X.shape 
+        
+        algo = KMeans(10) 
+        algo.fit(X)
+        
+        f = file('text_on_user.csv', 'w')
+        
+        for idx in range(len(photos)):
+            p = photos[idx]
+            f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(algo.labels_[idx])+'\n' ))
 
 
 def main():
@@ -165,6 +203,7 @@ def main():
     #pa.getRegions();
 
     #pa.doRegression()
-    pa.doClustering()
+    #pa.doClustering()
+    pa.doClusteringOnUser()
 if __name__ == "__main__":
     main()
