@@ -183,13 +183,14 @@ class PlazaAnalyzer():
                 except:
                     continue
             all_text.append( text )
-        vectorizer = TfidfVectorizer(max_df = 0.1, lowercase = True, sublinear_tf=True, analyzer='char', ngram_range=(3,3), stop_words='english', use_idf=True)
+        vectorizer = TfidfVectorizer(max_df = 0.1, lowercase = True, sublinear_tf=True, min_df=10, stop_words='english', use_idf=True)
         X = vectorizer.fit_transform(all_text)
 
         print 'shape = ',X.shape 
         
-        #algo = KMeans(10) 
-        algo = SpectralClustering(n_clusters=5)
+        algo = KMeans(10) 
+        #algo = SpectralClustering(n_clusters=5)
+        X = normalize(X)
         algo.fit(X)
         
         f = file('text_on_user.csv', 'w')
