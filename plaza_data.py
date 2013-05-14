@@ -76,7 +76,7 @@ class PlazaAnalyzer():
             bad_number += 1
             for p in ei.rangeQuery(region):
                 cnt += 1
-            if cnt>1000:
+            if cnt>5000:
                 region.display()
                 continue
             valid_squares.append( (region, cnt) )
@@ -140,7 +140,7 @@ class PlazaAnalyzer():
                 photo_cnt += 1
             if photo_cnt % 100 == 0:
                 print 'accepting photo data', photo_cnt
-            if photo_cnt>1000:
+            if photo_cnt>5000:
                 break
         return ok_photos
 
@@ -183,7 +183,7 @@ class PlazaAnalyzer():
                 except:
                     continue
             all_text.append( text )
-        vectorizer = TfidfVectorizer(max_df = 0.1, lowercase = True, sublinear_tf=True, analyzer='char', ngram_range=(3,5), stop_words='english', use_idf=True)
+        vectorizer = TfidfVectorizer(max_df = 0.1, lowercase = True, sublinear_tf=True, analyzer='char', ngram_range=(3,3), stop_words='english', use_idf=True)
         X = vectorizer.fit_transform(all_text)
 
         print 'shape = ',X.shape 
