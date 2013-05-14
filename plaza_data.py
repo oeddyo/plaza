@@ -6,10 +6,10 @@ from  element_interface import ElementInterface
 from sklearn import linear_model
 from sklearn.preprocessing import normalize 
 
-from sklearn.cluster import KMeans, MiniBatchKMeans
-
-
+from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, MeanShift
+from sklearn import cluster
 from datetime import datetime
+import numpy as np
 
 class PlazaAnalyzer():
     def __init__(self):
@@ -141,13 +141,17 @@ class PlazaAnalyzer():
 
         for p in photos:
             features.append( list(self.getCoordinates(p)))
-        km = KMeans(n_clusters = 10, init='k-means++', max_iter=100)
-        km.fit(features) 
-        f = file('morning_msp_10.txt', 'w')
+        #km = KMeans(n_clusters = 10, init='k-means++', max_iter=100)
+        #km.fit(features) 
+        
+        algo = MeanShift() 
+        algo.fit(np.asarray(features))
+
+        f = file('morning_msp_meanshift.csv', 'w')
 
         for idx in range(len(photos)):
             p = photos[idx]
-            f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(km.labels_[idx])+'\n' ))
+            f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(algo.labels_[idx])+'\n' ))
 
          
 
