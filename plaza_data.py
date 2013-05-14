@@ -6,7 +6,7 @@ from  element_interface import ElementInterface
 from sklearn import linear_model
 from sklearn.preprocessing import normalize 
 
-from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, MeanShift
+from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, MeanShift, SpectralClustering
 from sklearn import cluster
 from datetime import datetime
 import numpy as np
@@ -183,19 +183,20 @@ class PlazaAnalyzer():
                 except:
                     continue
             all_text.append( text )
-        vectorizer = TfidfVectorizer(max_df = 0.1, stop_words='english', use_idf=True)
+        vectorizer = TfidfVectorizer(max_df = 0.1, lowercase = True, sublinear_tf=True, analyzer='char', ngram_range=(3,5), stop_words='english', use_idf=True)
         X = vectorizer.fit_transform(all_text)
-        
+
         print 'shape = ',X.shape 
         
-        algo = KMeans(10) 
+        #algo = KMeans(10) 
+        algo = SpectralClustering(n_clusters=5)
         algo.fit(X)
         
         f = file('text_on_user.csv', 'w')
         
         for idx in range(len(photos)):
             p = photos[idx]
-            f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(algo.labels_[idx])+'\n' ))
+            f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(algo.labels_[idx])+','+p['images']['standard_resolution']['url'] + '\n' ))
 
 
 def main():
