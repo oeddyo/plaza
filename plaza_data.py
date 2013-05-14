@@ -89,7 +89,18 @@ class PlazaAnalyzer():
         if int(d.weekday())>=0 and int(d.weekday())<=4:
             return True
         return False
-    
+    def isMorning(self, p):
+        d = datetime.fromtimestamp(float(p['created_time']))
+        if int(d.hour)>=6 and int(d.hour)<=11:
+            return True
+        return False
+
+    def isEvening(self, p):
+        d = datetime.fromtimestamp(float(p['created_time']))
+        if int(d.hour)>=18 and int(d.hour)<=23:
+            return True
+        return False
+
     def inPoly(self, p):
         tmp = self.getCoordinates(p)
         p = Point(  tmp[0], tmp[1] )
@@ -101,10 +112,11 @@ class PlazaAnalyzer():
     def checkCondition(self, p):
         if not self.inPoly(p):
             return False
-        
-        if  self.isWeekday(p):
+        #if  self.isWeekday(p):
+        #    return False
+        if not self.isMorning(p):
             return False
-        
+
         return True
 
     def getClusteringData(self):
@@ -131,7 +143,7 @@ class PlazaAnalyzer():
             features.append( list(self.getCoordinates(p)))
         km = KMeans(n_clusters = 10, init='k-means++', max_iter=100)
         km.fit(features) 
-        f = file('clustered_kmeans_10_weekend.txt', 'w')
+        f = file('morning_msp_10.txt', 'w')
 
         for idx in range(len(photos)):
             p = photos[idx]
