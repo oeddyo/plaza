@@ -4,12 +4,7 @@ from region import Region
 from shapely.geometry import Point
 from  element_interface import ElementInterface
 from sklearn import linear_model
-from sklearn.preprocessing import normalize 
 
-from sklearn.cluster import KMeans, MiniBatchKMeans
-
-
-from datetime import datetime
 
 class PlazaAnalyzer():
     def __init__(self):
@@ -42,17 +37,15 @@ class PlazaAnalyzer():
                 t_feature += [dis]
             features.append(t_feature)
             labels.append(sq[1]) 
+        print features
+        print labels
+
         clf = linear_model.LinearRegression()
-        clf.fit((features), labels)
+        clf.fit(features, labels)
         
         names = [at[2] for at in attraction_list]
         coef = clf.coef_
-        
-        res_sorted = sorted(zip(names, coef), key=lambda tup: tup[1])
-        
-        print [str(n)+":"+str(c) for n,c in res_sorted]
-    
-    
+        print [str(n)+":"+str(c) for n,c in zip(names, coef)]
     def getRegions(self):
         plaza_squares = Region(self.coordinates)
         plaza_squares = plaza_squares.divideRegions(25,25)
@@ -60,92 +53,30 @@ class PlazaAnalyzer():
         ei = ElementInterface('citybeat_production', 'photos', 'photos')
         bad_number = 0
         all_number = 0
-        all_photo_number = 0
         for region in plaza_squares:
             all_number += 1
             mid_point = region.getMidCoordinates()
             point = Point( mid_point )
             if not point.within( self.valid_poly ):
+                print 'not valid ' 
                 continue
             cnt = 0
             bad_number += 1
             for p in ei.rangeQuery(region):
                 cnt += 1
-            if cnt>1000:
-                region.display()
-                continue
             valid_squares.append( (region, cnt) )
-            print 'cnt = ',cnt
-            all_photo_number+=cnt
+            print 'cnt = ',cnt 
         self.plaza_squares = valid_squares
         print "all number = ",all_number, " bad_number = ",bad_number
-        print 'all photos = ',all_photo_number
-   
-    def getCoordinates(self, p):
-        return (float(p['location']['latitude']), float(p['location']['longitude']))
 
-    def isWeekday(self, p):
-        d = datetime.fromtimestamp(float(p['created_time']))
-        if int(d.weekday())>=0 and int(d.weekday())<=4:
-            return True
-        return False
-    
-    def inPoly(self, p):
-        tmp = self.getCoordinates(p)
-        p = Point(  tmp[0], tmp[1] )
-
-        if p.within(self.valid_poly):
-            return True
-        return False
-
-    def checkCondition(self, p):
-        if not self.inPoly(p):
-            return False
-        
-        if not self.isWeekday(p):
-            return False
-        
-        return True
-
-    def getClusteringData(self):
-        ei = ElementInterface('citybeat_production', 'photos', 'photos')
-        region = Region(self.coordinates)
-
-        photos = ei.rangeQuery(region)
-        ok_photos = []
-        photo_cnt = 1
-        for p in photos:
-            if self.checkCondition(p):
-                ok_photos.append(p)
-                photo_cnt += 1
-            if photo_cnt % 100 == 0:
-                print 'accepting photo data', photo_cnt
-        return ok_photos
-
-    def doClustering(self):
-        photos = self.getClusteringData()
-        
-        features = []
-
-        for p in photos:
-            features.append( list(self.getCoordinates(p)))
-        km = KMeans(n_clusters = 10, init='k-means++', max_iter=100)
-        km.fit(features) 
-        f = file('clustered_kmeans_10.txt', 'w')
-
-        for idx in range(len(photos)):
-            p = photos[idx]
-            f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(km.labels_[idx])+'\n' ))
-
-         
 
 
 
 def main():
     pa = PlazaAnalyzer()
-    #pa.getRegions();
+    pa.getRegions();
 
-    #pa.doRegression()
-    pa.doClustering()
+    pa.doRegression()
+
 if __name__ == "__main__":
     main()
