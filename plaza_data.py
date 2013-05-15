@@ -69,6 +69,8 @@ class PlazaAnalyzer():
         local_users = set([u.strip() for u in open('local_users.txt','r').readlines()])
         f_local = file('local_distribution.csv', 'w')
         f_non_local = file('non_local_distribution.csv','w')
+        f_merge = file('merged.csv','w')
+
         bad_number = 0
         all_number = 0
         all_photo_number = 0
@@ -80,13 +82,16 @@ class PlazaAnalyzer():
                 continue
             cnt = 0
             bad_number += 1
+              
             for p in ei.rangeQuery(region):
                 if p['user']['username'] in local_users:
                     f_w = f_local
+                    f_merge.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+',0'+'\n')
                 elif p['user']['username'] in non_local_users:
                     if random.uniform(0,1)>0.1:
                         continue
                     else:
+                        f_merge.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+',1'+'\n')
                         f_w = f_non_local
                 try:
                     f_w.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+'\n')
