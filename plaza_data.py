@@ -84,7 +84,7 @@ class PlazaAnalyzer():
                 if p['user']['username'] in local_users:
                     f_w = f_local
                 elif p['user']['username'] in non_local_users:
-                    if random.random<0.1: 
+                    if random.random()<0.1: 
                         f_w = f_non_local
                 try:
                     f_w.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+'\n')
