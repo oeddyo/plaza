@@ -85,11 +85,14 @@ class PlazaAnalyzer():
                     f_w = f_local
                     f_merge.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+',0'+'\n')
                 elif p['user']['username'] in non_local_users:
-                    if random.uniform(0,1)>0.1:
+                    if random.uniform(0,1)>0.9999:
                         continue
                     else:
-                        f_merge.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+',1'+'\n')
-                        f_w = f_non_local
+                        try:
+                            f_merge.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+',1'+'\n')
+                        except:
+                            continue
+                    f_w = f_non_local
                 try:
                     f_w.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+'\n')
                 except:
