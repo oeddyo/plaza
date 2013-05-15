@@ -16,89 +16,58 @@ from sklearn.feature_extraction.text import TfidfTransformer
 
 
 
-class PlazaAnalyzer():
+class LocalUsers():
     def __init__(self):
-        self.coordinates =  [PlazaConfig.min_lat, PlazaConfig.min_lng, PlazaConfig.max_lat, PlazaConfig.max_lng] 
+        self.coordinates = [PlazaConfig.min_lat, PlazaConfig.min_lng, PlazaConfig.max_lat, PlazaConfig.max_lng] 
         self.valid_poly = PlazaConfig.poly
-     
-    def readAttractions(self):
-        f = open('attraction_msq.txt').readlines()
-        attraction_list = []
-        for line in f:
-            t = line.split(',')
-            lat = float(t[0])
-            lng = float(t[1])
-            attraction_list.append( (lat, lng, t[2]) )
-        return attraction_list
-
-    def getDis(self, lat1, lng1, lat2, lng2):
-        return (85*(lat1-lat2)*(lat1-lat2) + 111*(lng1-lng2)*(lng1-lng2))*1000
-
-    def doRegression(self):
-        features = []
-        labels = []
-        attraction_list = self.readAttractions()
-        for sq in self.plaza_squares:
-            lat = sq[0].getMidCoordinates()[0]
-            lng = sq[0].getMidCoordinates()[1]
-            t_feature = []
-            for attraction in attraction_list:
-                dis = self.getDis(lat, lng, attraction[0], attraction[1])
-                t_feature += [dis]
-            features.append(t_feature)
-            labels.append(sq[1]) 
-        clf = linear_model.LinearRegression()
-        clf.fit((features), labels)
-        
-        names = [at[2] for at in attraction_list]
-        coef = clf.coef_
-        
-        res_sorted = sorted(zip(names, coef), key=lambda tup: tup[1])
-        
-        print [str(n)+":"+str(c) for n,c in res_sorted]
     
+        self.m_ei = MongoDBInterface()
+        self.m_ei.setDB('citybeat_production')
+        self.m_ei.setCollection('photos')
     
-    def getRegions(self):
+    def isLocal(self, username):
+        check_time = 1366033832
+        user_photos = self.m_ei.getAllDocuments({'user.username':username})
+        one_week = 7*24*3600
+        t_end = check_time+4*one_week
+        cur_time = check_time
+        while cur_time<t_end:
+            ok = False
+            for p in user_photos:
+                t = int(p['created_time'])
+                if t>cur_time and t<cur_time + one_week:
+                    ok = True
+                    break
+            if ok:
+                cur_time += one_week
+            else:
+                return False
+        return True
+
+    
+    def getLocalUsers(self):
         plaza_squares = Region(self.coordinates)
         plaza_squares = plaza_squares.divideRegions(25,25)
-        valid_squares = []
+        users_in_park = set()
         ei = ElementInterface('citybeat_production', 'photos', 'photos')
-
-        non_local_users = set([u.strip() for u in open('all_users.txt','r').readlines()])
-        local_users = set([u.strip() for u in open('local_users.txt','r').readlines()])
-        f_local = file('local_distribution.csv', 'w')
-        f_non_local = file('non_local_distribution.csv','w')
-        bad_number = 0
-        all_number = 0
-        all_photo_number = 0
         for region in plaza_squares:
-            all_number += 1
             mid_point = region.getMidCoordinates()
             point = Point( mid_point )
             if not point.within( self.valid_poly ):
                 continue
-            cnt = 0
-            bad_number += 1
             for p in ei.rangeQuery(region):
-                if p['user']['username'] in local_users:
-                    f_w = f_local
-                elif p['user']['username'] in non_local_users:
-                    f_w = f_non_local
-                try:
-                    f_w.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+'\n')
-                except:
-                    continue
-                cnt += 1
-            if cnt>5000:
-                region.display()
-                continue
-            valid_squares.append( (region, cnt) )
-            print 'cnt = ',cnt
-            all_photo_number+=cnt
-        self.plaza_squares = valid_squares
-        print "all number = ",all_number, " bad_number = ",bad_number
-        print 'all photos = ',all_photo_number
-   
+                users_in_park.add(p['user']['username'])
+        f = file('all_users.txt', 'w') 
+        for u in users_in_park:
+            f.write(u+'\n')
+        
+        f = file('local_users.txt', 'w')
+        for u in users_in_park:
+            if self.isLocal(u):
+                f.write(u+'\n')
+
+
+
     def getCoordinates(self, p):
         return (float(p['location']['latitude']), float(p['location']['longitude']))
 
@@ -139,8 +108,6 @@ class PlazaAnalyzer():
         #    return False
 
         return True
-    
-
 
     def getClusteringData(self):
         ei = ElementInterface('citybeat_production', 'photos', 'photos')
@@ -178,7 +145,7 @@ class PlazaAnalyzer():
         for idx in range(len(photos)):
             p = photos[idx]
             f.write( (str(p['location']['latitude'])+','+str(p['location']['longitude'])+','+str(algo.labels_[idx])+p['images']['standard_resolution']['url']+'\n' ))
-    
+
     def doClusteringOnUser(self):
         photos = self.getClusteringData()
         all_text = []
@@ -217,11 +184,7 @@ class PlazaAnalyzer():
 
 
 def main():
-    pa = PlazaAnalyzer()
-    pa.getRegions();
-
-    #pa.doRegression()
-    #pa.doClustering()
-    #pa.doClusteringOnUser()
+    pa = LocalUsers()
+    pa.getLocalUsers()
 if __name__ == "__main__":
     main()
