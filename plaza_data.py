@@ -5,6 +5,7 @@ from shapely.geometry import Point
 from  element_interface import ElementInterface
 from sklearn import linear_model
 from sklearn.preprocessing import normalize 
+import random
 
 from sklearn.cluster import KMeans, MiniBatchKMeans, DBSCAN, MeanShift, SpectralClustering
 from sklearn import cluster
@@ -83,7 +84,8 @@ class PlazaAnalyzer():
                 if p['user']['username'] in local_users:
                     f_w = f_local
                 elif p['user']['username'] in non_local_users:
-                    f_w = f_non_local
+                    if random.random<0.1: 
+                        f_w = f_non_local
                 try:
                     f_w.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+'\n')
                 except:
