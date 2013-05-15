@@ -1,4 +1,3 @@
-
 from config import PlazaConfig
 from region import Region
 from shapely.geometry import Point
@@ -15,13 +14,12 @@ from mongodb_interface import MongoDBInterface
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
-
-
 class PlazaAnalyzer():
     def __init__(self):
         self.coordinates =  [PlazaConfig.min_lat, PlazaConfig.min_lng, PlazaConfig.max_lat, PlazaConfig.max_lng] 
         self.valid_poly = PlazaConfig.poly
-     
+        self.file_name_prefix = "wsp_"
+
     def readAttractions(self):
         f = open('attraction_msq.txt').readlines()
         attraction_list = []
@@ -58,18 +56,17 @@ class PlazaAnalyzer():
         
         print [str(n)+":"+str(c) for n,c in res_sorted]
     
-    
     def getRegions(self):
         plaza_squares = Region(self.coordinates)
         plaza_squares = plaza_squares.divideRegions(25,25)
         valid_squares = []
         ei = ElementInterface('citybeat_production', 'photos', 'photos')
 
-        non_local_users = set([u.strip() for u in open('all_users.txt','r').readlines()])
-        local_users = set([u.strip() for u in open('local_users.txt','r').readlines()])
-        f_local = file('local_distribution.csv', 'w')
-        f_non_local = file('non_local_distribution.csv','w')
-        f_merge = file('merged.csv','w')
+        non_local_users = set([u.strip() for u in open(self.file_name_prefix+'all_users.txt','r').readlines()])
+        local_users = set([u.strip() for u in open(self.file_name_prefix+'local_users.txt','r').readlines()])
+        f_local = file(self.file_name_prefix+'local_distribution.csv', 'w')
+        f_non_local = file(self.file_name_prefix+'non_local_distribution.csv','w')
+        f_merge = file(self.file_name_prefix+'merged.csv','w')
 
         bad_number = 0
         all_number = 0
@@ -82,7 +79,7 @@ class PlazaAnalyzer():
                 continue
             cnt = 0
             bad_number += 1
-              
+
             for p in ei.rangeQuery(region):
                 if p['user']['username'] in local_users:
                     f_w = f_local
@@ -182,7 +179,7 @@ class PlazaAnalyzer():
         algo = SpectralClustering(4)
         algo.fit(np.asarray(features))
 
-        f = file('evening_msp_meanshift.csv', 'w')
+        f = file(self.file_name_prefix+'evening_msp_meanshift.csv', 'w')
 
         for idx in range(len(photos)):
             p = photos[idx]
@@ -218,7 +215,7 @@ class PlazaAnalyzer():
         X = normalize(X)
         algo.fit(X)
         
-        f = file('text_on_user.csv', 'w')
+        f = file(self.file_name_prefix+'text_on_user.csv', 'w')
         
         for idx in range(len(photos)):
             p = photos[idx]

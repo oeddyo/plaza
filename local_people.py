@@ -24,7 +24,8 @@ class LocalUsers():
         self.m_ei = MongoDBInterface()
         self.m_ei.setDB('citybeat_production')
         self.m_ei.setCollection('photos')
-    
+        self.file_prefix = "wsp_"
+
     def isLocal(self, username):
         check_time = 1366033832
         user_photos = self.m_ei.getAllDocuments({'user.username':username})
@@ -57,11 +58,11 @@ class LocalUsers():
                 continue
             for p in ei.rangeQuery(region):
                 users_in_park.add(p['user']['username'])
-        f = file('all_users.txt', 'w') 
+        f = file(self.file_prefix+'all_users.txt', 'w') 
         for u in users_in_park:
             f.write(u+'\n')
         
-        f = file('local_users.txt', 'w')
+        f = file(self.file_prefix+'local_users.txt', 'w')
         for u in users_in_park:
             if self.isLocal(u):
                 f.write(u+'\n')
@@ -140,7 +141,7 @@ class LocalUsers():
         algo = SpectralClustering(4)
         algo.fit(np.asarray(features))
 
-        f = file('evening_msp_meanshift.csv', 'w')
+        f = file(self.file_prefix+'evening_msp_meanshift.csv', 'w')
 
         for idx in range(len(photos)):
             p = photos[idx]
@@ -176,7 +177,7 @@ class LocalUsers():
         X = normalize(X)
         algo.fit(X)
         
-        f = file('text_on_user.csv', 'w')
+        f = file(self.file_prefix+'text_on_user.csv', 'w')
         
         for idx in range(len(photos)):
             p = photos[idx]
