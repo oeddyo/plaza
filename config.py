@@ -27,10 +27,11 @@ class BaseConfig(object):
                 return cp + '\\region_cache\\'
 
 class PlazaConfig(BaseConfig):
-    #points_list = ((40.74347, -73.98823), (40.74154, -73.98963),(40.74086, -73.98797), (40.74277, -73.98654))  #msp
-    points_list = (((40.73729, -73.99053),(40.73668, -73.98884),(40.73419, -73.98999),(40.73517, -73.99206)))   #union square
-    
-    file_prefix = "us_"   #wsp, msp 
+    points_list = ((40.74347, -73.98823), (40.74154, -73.98963),(40.74086, -73.98797), (40.74277, -73.98654))  #msp
+    #points_list = (((40.73729, -73.99053),(40.73668, -73.98884),(40.73419, -73.98999),(40.73517, -73.99206)))   #union square
+    #points_list = (((40.7322,-73.9986),(40.7307,-73.9955),(40.7310, -73.9997),(40.7296,-73.9965)))   #wsp
+
+    file_prefix = "msp_"   #wsp, msp 
     poly = Polygon(((points_list)))  #madison square
     min_lat = min([t[0] for t in points_list])
     max_lat = max([t[0] for t in points_list])
