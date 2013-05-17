@@ -14,11 +14,16 @@ from mongodb_interface import MongoDBInterface
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
+import numpy as np
+
+
 class PlazaAnalyzer():
-    def __init__(self, time_of_day = 'afternoon', local_or_not = 'non_local'):
-        self.coordinates =  [PlazaConfig.min_lat, PlazaConfig.min_lng, PlazaConfig.max_lat, PlazaConfig.max_lng] 
-        self.valid_poly = PlazaConfig.poly
-        self.file_prefix = PlazaConfig.file_prefix 
+    def __init__(self, plaza = 'wsp', time_of_day = 'afternoon', local_or_not = 'non_local'):
+        plaza_config = PlazaConfig(plaza)
+
+        self.coordinates =  [plaza_config.min_lat, plaza_config.min_lng, plaza_config.max_lat, plaza_config.max_lng] 
+        self.valid_poly = plaza_config.poly
+        self.file_prefix = plaza_config.file_prefix 
         self.m_ei = MongoDBInterface()
         self.m_ei.setDB('citybeat_production')
         self.m_ei.setCollection('photos')
@@ -31,7 +36,6 @@ class PlazaAnalyzer():
 
     def _isMorning(self, p):
         d = datetime.fromtimestamp(float(p['created_time']))
-        print 'hour = ', d.hour
         if int(d.hour)>=6 and int(d.hour)<=12:
             return True
         return False
@@ -49,10 +53,7 @@ class PlazaAnalyzer():
         return False
     
     def _isAtTime(self, p):
-        print 'time of day = ', self.time_of_day
-        print self.time_of_day == 'morning'
         if self.time_of_day == 'morning':
-            print 'in here'
             return self._isMorning(p)
         elif self.time_of_day == 'afternoon':
             return self._isAfternoon(p)
@@ -91,13 +92,10 @@ class PlazaAnalyzer():
 
     def _timeFilter(self):
         photos = []
-        print 'begin filtering data to ', self.time_of_day
-        print 'i have ', len(self.photos),' photos at begining'
         for p in self.photos:
             if self._isAtTime(p) :
                 photos.append(p)
         self.photos = photos
-        print 'after filter there are ', len(self.photos),' photos'
 
     def _getAllPhotosInPlaza(self):
         plaza_squares = Region(self.coordinates)
@@ -128,10 +126,7 @@ class PlazaAnalyzer():
             return None
         speeds = []
         for move in movements:
-            print movements
             for i in range(len(move)-1):
-                print 'i = ', i, ' move[i] = ', move[i]
-                print 'i+1 = ', i+1, 'move[i+1] = ', move[i+1]
                 start_point = move[i][0]
                 start_t = move[i][1]
                 end_point = move[i+1][0]
@@ -139,12 +134,9 @@ class PlazaAnalyzer():
 
                 t_dif = end_t - start_t
 
-                print 'start and end ',start_point, end_point
                 dis = self._getDis(start_point[0], start_point[1], end_point[0],end_point[1])
-                print 'dis tdif = ', dis, t_dif
                 if t_dif!=0:
                     speeds.append( dis*1.0/t_dif)
-        print speeds
         if len(speeds)!=0:
             return sum(speeds)*1.0/(len(speeds))
         return None
@@ -157,7 +149,6 @@ class PlazaAnalyzer():
             return None
         stays = []
         for move in movements:
-            print movements
             start_t = move[0][1]
             end_t = move[len(move)-1][1]
             t_dif = end_t - start_t
@@ -170,7 +161,6 @@ class PlazaAnalyzer():
     def getUserMovements(self, username):
         # (username, [(loc1,time1) (loc2,time2), ... ] )
         photos = self.user_photos[username]
-        print 'for user ', username, ' we have ', len(photos)
         positions = []
         for p in photos:
             cor = self.getCoordinates(p)
@@ -190,7 +180,6 @@ class PlazaAnalyzer():
                     cur_mov.append(positions[i])
                     movements.append(cur_mov)
                 cur_mov = []
-        #print movements
         return movements
 
     def getCoordinates(self, p):
@@ -223,16 +212,25 @@ class PlazaAnalyzer():
 
         return True
 def main():
-    pa = PlazaAnalyzer()
 
-    f = file('./data/'+pa.file_prefix+pa.time_of_day+'.txt', 'w')
-    for u in pa.user_photos:
-        #pa.getUserMovements(u)
-        #t = pa.computeSpeed(u)
-        t = pa.stayDuration(u)
-        if t is not None:
-            print 'mean = ',t
-            f.write(str(t)+'\n')
+    t_list = ['morning', 'afternoon', 'evening']
+    t_parks = ['wsp', 'us', 'msp']
+
+    for park in t_parks:
+        for time_of_day in t_list:
+            pa = PlazaAnalyzer(park, time_of_day)
+            f = file('./data/'+pa.file_prefix+pa.time_of_day+'.txt', 'w')
+            tmp_vector = []
+
+            for u in pa.user_photos:
+                #pa.getUserMovements(u)
+                #t = pa.computeSpeed(u)
+                t = pa.stayDuration(u)
+                if t is not None:
+                    f.write(str(t)+'\n')
+                    tmp_vector.append(t)
+            print 'setting ', park, time_of_day
+            print np.mean(tmp_vector), np.std(tmp_vector)
     #pa.doRegression()
     #pa.doClustering()
     #pa.doClusteringOnUser()
