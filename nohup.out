@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "local_people.py", line 114, in <module>
+    main()
+  File "local_people.py", line 112, in main
+    pa.getLocalUsers()
+  File "local_people.py", line 61, in getLocalUsers
+    f = file('./lib_data/'+self.file_prefix+'non_local_users.txt', 'w') 
+IOError: [Errno 2] No such file or directory: './lib_data/us_non_local_users.txt'

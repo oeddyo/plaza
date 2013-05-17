@@ -1,7 +1,0 @@
-40.742311, -73.988580, "jimmy dog run"
-40.741451, -73.988189, "shake shack"
-40.741719, -73.988307, "southern fountain"
-40.742179, -73.988156, "mid lawn"
-40.742584, -73.987774, "admiral david farragut monument"
-40.741309, -73.989361, "metro N,R"
-40.742506, -73.987338, "play yard"

@@ -71,6 +71,10 @@ class PlazaAnalyzer():
         bad_number = 0
         all_number = 0
         all_photo_number = 0
+        
+        user_photos_cnt = {}
+
+
         for region in plaza_squares:
             all_number += 1
             mid_point = region.getMidCoordinates()
@@ -81,6 +85,12 @@ class PlazaAnalyzer():
             bad_number += 1
 
             for p in ei.rangeQuery(region):
+                un = p['user']['username']
+                if un in user_photos_cnt:
+                    user_photos_cnt[un] += 1
+                else:
+                    user_photos_cnt[un] = 0
+
                 if p['user']['username'] in local_users:
                     f_w = f_local
                     f_merge.write(str(p['location']['latitude'])+","+str(p['location']['longitude'])+','+p['images']['standard_resolution']['url']+',0'+'\n')
@@ -107,7 +117,12 @@ class PlazaAnalyzer():
         self.plaza_squares = valid_squares
         print "all number = ",all_number, " bad_number = ",bad_number
         print 'all photos = ',all_photo_number
-   
+        
+        larger_than_two = 0
+        for u in user_photos_cnt:
+            if user_photos_cnt[u]>=2:
+                larger_than_two += 1
+                print 'larger than 2 = ',larger_than_two
     def getCoordinates(self, p):
         return (float(p['location']['latitude']), float(p['location']['longitude']))
 
