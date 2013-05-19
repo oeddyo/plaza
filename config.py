@@ -28,7 +28,6 @@ class BaseConfig(object):
 
 class PlazaConfig(BaseConfig):
     def __init__(self, plaza):
-        print 'plaza = ', plaza
         if plaza == 'msp':
             points_list = ((40.74347, -73.98823), (40.74154, -73.98963),(40.74086, -73.98797), (40.74277, -73.98654))  #msp
             file_prefix = "msp_"   #wsp, msp 
@@ -46,6 +45,8 @@ class PlazaConfig(BaseConfig):
         self.max_lat = max([t[0] for t in points_list])
         self.min_lng = min([t[1] for t in points_list])
         self.max_lng = max([t[1] for t in points_list])
+        self.images_path = '/grande/local/kx19/images/'
+
 
 class InstagramConfig(BaseConfig):
     photo_db = 'citybeat_production'

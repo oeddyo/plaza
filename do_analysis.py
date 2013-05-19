@@ -14,6 +14,8 @@ from mongodb_interface import MongoDBInterface
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
+from urllib import urlretrieve
+
 import numpy as np
 
 
@@ -211,6 +213,9 @@ class PlazaAnalyzer():
         #    return False
 
         return True
+    def _downloadPhoto(self, url):
+        print 'download this url'
+
 def main():
 
     t_list = ['morning', 'afternoon', 'evening']
